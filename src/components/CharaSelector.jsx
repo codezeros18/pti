@@ -8,16 +8,14 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-import char1 from "../assets/char/char1.png";
-import char2 from "../assets/char/char3.png";
-import char3 from "../assets/char/char4.png";
-import char4 from "../assets/char/char5.png";
+import char1 from "../assets/Char1/Idle.png";
+import char2 from "../assets/Char2/Idle.png";
+import char3 from "../assets/Char3/Idle.png";
 
 const characters = [
   { img: char1, description: "An agile adventurer with speed boost." },
   { img: char2, description: "A magician with elemental powers." },
   { img: char3, description: "A warrior with high strength." },
-  { img: char4, description: "A rogue who moves in shadows." },
 ];
 
 const CharaSelector = () => {
@@ -66,7 +64,7 @@ const CharaSelector = () => {
               <img
                 src={char.img}
                 alt={`Character ${index}`}
-                className="mx-auto max-w-[100px] md:max-w-[200px] h-auto drop-shadow-lg"
+                className="mx-auto max-w-[100px] md:max-w-[140px] h-auto drop-shadow-lg"
               />
             </SwiperSlide>
           ))}

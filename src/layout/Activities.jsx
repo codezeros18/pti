@@ -7,12 +7,6 @@ import { locationActivities } from "./locationActivities";
 import { usePlayerStatus } from "../PlayerStatusContext";
 import { useGame } from "../GameContext";
 import GreetingMessage from "../components/GreetingMessage";
-import char1 from '../assets/char/char1.png';
-import char2 from '../assets/char/char3.png';
-import char3 from '../assets/char/char4.png';
-import char4 from '../assets/char/char5.png';
-
-const charImages = [char1, char2, char3, char4];
 
 const Activities = ({ location = "home" }) => {
   const { playerName } = useGame();
