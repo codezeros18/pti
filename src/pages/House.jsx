@@ -39,7 +39,8 @@ function percentToTile({ top, left }) {
 }
 
 const House = () => {
-  const { location, resetGame, eventMessage, updateStatus } = usePlayerStatus();
+  const { eventMessage, updateStatus, money } = usePlayerStatus();
+  const [activityMessage, setActivityMessage] = useState(""); // <-- Add this
   const [position, setPosition] = useState({ top: 38, left: 34 }); // Top right spawn
   const [activeLocation, setActiveLocation] = useState(null);
   const [direction, setDirection] = useState('down');
@@ -186,8 +187,14 @@ const House = () => {
       (a) => a.name.toLowerCase() === loc.name.toLowerCase()
     );
     if (activity) {
-      updateStatus(activity.effect);
-      // Optionally, show a message or modal here
+      const cost = activity.effect.money && activity.effect.money < 0 ? -activity.effect.money : 0;
+      if (money >= cost) {
+        updateStatus(activity.effect);
+        setActivityMessage(activity.benefit || "Action performed!");
+      } else {
+        setActivityMessage("Not enough money!");
+      }
+      setTimeout(() => setActivityMessage(""), 1500);
     }
   };
 
@@ -198,6 +205,12 @@ const House = () => {
       <RandomEventModal message={eventMessage} />
       <GameOver />
       <Navbar />
+      {/* Feedback message */}
+      {activityMessage && (
+        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 bg-yellow-200 text-[#255C4E] px-4 py-2 rounded shadow-lg z-50">
+          {activityMessage}
+        </div>
+      )}
       <Activities location={activeLocation ? activeLocation.toLowerCase() : 'house'} />
       <Map
         customLocations={customLocations}

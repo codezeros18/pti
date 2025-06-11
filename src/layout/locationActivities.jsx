@@ -62,6 +62,11 @@ export const locationActivities = {
       benefit: "Refresh yourself.",
       effect: { hygiene: +5, energy: +5 },
     },
+    {
+      name: "Fishing",
+      benefit: "Gain money, lose energy.",
+      effect: { money: +10, energy: -15 },
+    }
   ],
   temple: [
     {

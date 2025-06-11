@@ -51,30 +51,30 @@ import DefaultBackground from '../assets/background/maps2.png'; // Default backg
 import { useNavigate } from "react-router-dom"; // Add this import
 
 const charAnimations = [
-  // Char1
-  {
-    idle: idle1,
-    up: [walkUp1_1, walkUp1_2, walkUp1_3],
-    down: [walkDown1_1, walkDown1_2, walkDown1_3],
-    left: [walkLeft1_1, walkLeft1_2, walkLeft1_3],
-    right: [walkRight1_1, walkRight1_2, walkRight1_3],
-  },
-  // Char2
-  {
-    idle: idle2,
-    up: [walkUp2_1, walkUp2_2, walkUp2_3],
-    down: [walkDown2_1, walkDown2_2, walkDown2_3],
-    left: [walkLeft2_1, walkLeft2_2, walkLeft2_3], // Ganti jika ada PNG
-    right: [walkRight2_1, walkRight2_2, walkRight2_3],
-  },
-  // Char3
-  {
-    idle: idle3,
-    up: [walkUp3_1, walkUp3_2, walkUp3_3],
-    down: [walkDown3_1, walkDown3_2, walkDown3_3],
-    left: [walkLeft3_1, walkLeft3_2],
-    right: [walkRight3_1, walkRight3_2],
-  },
+// Char1
+{
+  idle: idle1,
+  up: [walkUp1_1, walkUp1_2, walkUp1_3],
+  down: [walkDown1_1, walkDown1_2, walkDown1_3],
+  left: [walkLeft1_1, walkLeft1_2, walkLeft1_3],
+  right: [walkRight1_1, walkRight1_2, walkRight1_3],
+},
+// Char2
+{
+  idle: idle2,
+  up: [walkUp2_1, walkUp2_2, walkUp2_3],
+  down: [walkDown2_1, walkDown2_2, walkDown2_3],
+  left: [walkLeft2_1, walkLeft2_2, walkLeft2_3], // Ganti jika ada PNG
+  right: [walkRight2_1, walkRight2_2, walkRight2_3],
+},
+// Char3
+{
+  idle: idle3,
+  up: [walkUp3_1, walkUp3_2, walkUp3_3],
+  down: [walkDown3_1, walkDown3_2, walkDown3_3],
+  left: [walkLeft3_1, walkLeft3_2],
+  right: [walkRight3_1, walkRight3_2],
+},
 ];
 
 // All values in % from the top-left corner
@@ -85,161 +85,162 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const PROXIMITY_RADIUS = 4; // in percent, adjust as needed
 
 const Map = ({
-  position = { top: 50, left: 50 },
-  direction = "down",
-  isMoving = false,
-  onLocationClick = () => {},
-  viewportWidth = 800,
-  viewportHeight = 600,
-  customLocations,
-  backgroundImage,
-  collisionData,
-  mapWidth = 1600,   // 🆕 add this
-  mapHeight = 1000,  // 🆕 add this
+position = { top: 50, left: 50 },
+direction = "down",
+isMoving = false,
+onLocationClick = () => {},
+viewportWidth = 800,
+viewportHeight = 600,
+customLocations,
+backgroundImage,
+collisionData,
+mapWidth = 1600,   // 🆕 add this
+mapHeight = 1000,  // 🆕 add this
 }) => {
-  const { selectedCharacter } = useGame();
-  const [frame, setFrame] = useState(0);
-  const [nearLocation, setNearLocation] = useState(null); // Track nearby location
-  const navigate = useNavigate(); // For navigation
+const { selectedCharacter } = useGame();
+const [frame, setFrame] = useState(0);
+const [nearLocation, setNearLocation] = useState(null); // Track nearby location
+const navigate = useNavigate(); // For navigation
 
-  // Ganti frame setiap 150ms saat bergerak
-  useEffect(() => {
-    let interval = null;
-    if (isMoving) {
-      interval = setInterval(() => {
-        setFrame((prev) => (prev + 1) % charAnimations[selectedCharacter][direction].length);
-      }, 150);
-    } else {
-      setFrame(0);
-    }
-    return () => clearInterval(interval);
-  }, [isMoving, direction, selectedCharacter]);
-
-  const locationsToRender = customLocations || locations;
-
-  // Check proximity on position change
-  useEffect(() => {
-    const found = locationsToRender.find(loc => {
-      const dx = loc.left - position.left;
-      const dy = loc.top - position.top;
-      return Math.sqrt(dx * dx + dy * dy) <= PROXIMITY_RADIUS;
-    });
-    setNearLocation(found || null);
-  }, [position, locationsToRender]);
-
-  const clampedTop = clamp(position.top, 5, 95);
-  const clampedLeft = clamp(position.left, 5, 95);
-
-  const anim = charAnimations[selectedCharacter];
-  let charImage = anim.idle;
-  if (isMoving && anim[direction]) {
-    charImage = anim[direction][frame];
+// Ganti frame setiap 150ms saat bergerak
+useEffect(() => {
+  let interval = null;
+  if (isMoving) {
+    interval = setInterval(() => {
+      setFrame((prev) => (prev + 1) % charAnimations[selectedCharacter][direction].length);
+    }, 150);
+  } else {
+    setFrame(0);
   }
+  return () => clearInterval(interval);
+}, [isMoving, direction, selectedCharacter]);
 
-  // Convert position (%) to px
-  const playerX = (position.left / 100) * mapWidth;
-  const playerY = (position.top / 100) * mapHeight;
+const locationsToRender = customLocations || locations;
 
-  // Calculate camera offset so player is centered
-  const maxOffsetX = Math.max(mapWidth - viewportWidth, 0);
-  const maxOffsetY = Math.max(mapHeight - viewportHeight, 0);
+// Check proximity on position change
+useEffect(() => {
+  const found = locationsToRender.find(loc => {
+    const dx = loc.left - position.left;
+    const dy = loc.top - position.top;
+    return Math.sqrt(dx * dx + dy * dy) <= PROXIMITY_RADIUS;
+  });
+  setNearLocation(found || null);
+}, [position, locationsToRender]);
 
-  const offsetX = clamp(playerX - viewportWidth / 2, 0, maxOffsetX);
-  const offsetY = clamp(playerY - viewportHeight / 2, 0, maxOffsetY);
+const clampedTop = clamp(position.top, 5, 95);
+const clampedLeft = clamp(position.left, 5, 95);
 
-  // Map location name to route path
-  const locationRoutes = {
-    Home: "/house",
-    Beach: "/beach",
-    Lake: "/lake",
-    Temple: "/temple",
-    Mountain: "/mountain",
-    Dungeon: "/dungeon",
-    Map : "/home",
-  };
+const anim = charAnimations[selectedCharacter];
+let charImage = anim.idle;
+if (isMoving && anim[direction]) {
+  charImage = anim[direction][frame];
+}
 
-  // Gunakan backgroundImage prop, fallback ke default
-  const bgImage = backgroundImage || DefaultBackground;
+// Convert position (%) to px
+const playerX = (position.left / 100) * mapWidth;
+const playerY = (position.top / 100) * mapHeight;
 
-  // Gunakan collisionData prop jika ada
-  // (bisa diteruskan ke logic collision di parent, atau Map jika perlu)
+// Calculate camera offset so player is centered
+const maxOffsetX = Math.max(mapWidth - viewportWidth, 0);
+const maxOffsetY = Math.max(mapHeight - viewportHeight, 0);
 
-  return (
+const offsetX = clamp(playerX - viewportWidth / 2, 0, maxOffsetX);
+const offsetY = clamp(playerY - viewportHeight / 2, 0, maxOffsetY);
+
+// Map location name to route path
+const locationRoutes = {
+  Home: "/house",
+  Beach: "/beach",
+  Lake: "/lake",
+  Temple: "/temple",
+  Mountain: "/mountain",
+  Dungeon: "/dungeon",
+  Map : "/home",
+};
+
+// Gunakan backgroundImage prop, fallback ke default
+const bgImage = backgroundImage || DefaultBackground;
+
+// Gunakan collisionData prop jika ada
+// (bisa diteruskan ke logic collision di parent, atau Map jika perlu)
+
+return (
+  <div
+    style={{
+      width: viewportWidth,
+      height: viewportHeight,
+      overflow: 'hidden',
+      position: 'relative',
+      border: '2px solid #333',
+      background: '#000',
+      userSelect: 'none', // <-- Prevent selection
+      WebkitUserSelect: 'none', // For Safari
+      msUserSelect: 'none', // For IE/Edge
+    }}
+    className="select-none" // If using Tailwind, this also works
+  >
     <div
       style={{
-        width: viewportWidth,
-        height: viewportHeight,
-        overflow: 'hidden',
-        position: 'relative',
-        border: '2px solid #333',
-        background: '#000',
-        userSelect: 'none', // <-- Prevent selection
-        WebkitUserSelect: 'none', // For Safari
-        msUserSelect: 'none', // For IE/Edge
+        width: mapWidth,
+        height: mapHeight,
+        position: 'absolute',
+        left: -offsetX,
+        top: -offsetY,
+        backgroundImage: `url(${bgImage})`,
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat',
+        transition: 'left 0.1s, top 0.1s',
+        userSelect: 'none', // Prevent selection inside map
       }}
-      className="select-none" // If using Tailwind, this also works
+      className="select-none"
     >
-      <div
+      {/* Render player */}
+      <img
+        src={charImage}
         style={{
-          width: mapWidth,
-          height: mapHeight,
           position: 'absolute',
-          left: -offsetX,
-          top: -offsetY,
-          backgroundImage: `url(${bgImage})`,
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
-          transition: 'left 0.1s, top 0.1s',
-          userSelect: 'none', // Prevent selection inside map
+          left: playerX,
+          top: playerY,
+          width: 42,
+          height: 42,
+          transform: 'translate(-50%, -50%)',
+          zIndex: 10,
+          userSelect: 'none', // Prevent selection on image
         }}
-        className="select-none"
-      >
-        {/* Render player */}
-        <img
-          src={charImage}
+        alt="Player"
+        draggable={false} // <-- Prevent drag on image
+      />
+      {/* Show button if near a location */}
+      {nearLocation && (
+        <button
           style={{
             position: 'absolute',
-            left: playerX,
+            left: playerX - 60, // <-- Place button to the left of the player
             top: playerY,
-            width: 42,
-            height: 42,
             transform: 'translate(-50%, -50%)',
-            zIndex: 10,
-            userSelect: 'none', // Prevent selection on image
+            zIndex: 20,
+            padding: '8px 16px',
+            color: 'white',
+            background: '#255C4E',
+            fontSize: 16,
+            border: '2px solid #333',
+            borderRadius: 8,
+            cursor: 'pointer',
           }}
-          alt="Player"
-          draggable={false} // <-- Prevent drag on image
-        />
-        {/* Show button if near a location */}
-        {nearLocation && (
-          <button
-            style={{
-              position: 'absolute',
-              left: playerX - 60, // <-- Place button to the left of the player
-              top: playerY,
-              transform: 'translate(-50%, -50%)',
-              zIndex: 20,
-              padding: '8px 16px',
-              fontSize: 16,
-              background: '#fff',
-              border: '2px solid #333',
-              borderRadius: 8,
-              cursor: 'pointer',
-            }}
-            onClick={() => {
-              if (locationRoutes[nearLocation.name]) {
-                navigate(locationRoutes[nearLocation.name]);
-              } else {
-                onLocationClick(nearLocation);
-              }
-            }}
-          >
-            {nearLocation.name}
-          </button>
-        )}
-      </div>
+          onClick={() => {
+            if (locationRoutes[nearLocation.name]) {
+              navigate(locationRoutes[nearLocation.name]);
+            } else {
+              onLocationClick(nearLocation);
+            }
+          }}
+        >
+          {nearLocation.name}
+        </button>
+      )}
     </div>
-  );
+  </div>
+);
 };
 
 

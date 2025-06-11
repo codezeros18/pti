@@ -38,8 +38,18 @@ function percentToTile({ top, left }) {
   return { x, y };
 }
 
+const INVENTORY_LIMIT = 3;
+
+const isBuyAction = (action) =>
+  action.name.toLowerCase().includes("buy") ||
+  action.name.toLowerCase().includes("potion") ||
+  action.name.toLowerCase().includes("snack") ||
+  action.name.toLowerCase().includes("souvenir") ||
+  action.name.toLowerCase().includes("charm");
+
 const Mountain = () => {
-  const { location, resetGame, eventMessage, updateStatus } = usePlayerStatus();
+  const { eventMessage, updateStatus, money, addItem, inventory, addScore } = usePlayerStatus();
+  const [activityMessage, setActivityMessage] = useState(""); // <-- Add this
   const [position, setPosition] = useState({ top: 80, left: 52 }); // Top right spawn
   const [activeLocation, setActiveLocation] = useState(null);
   const [direction, setDirection] = useState('down');
@@ -181,23 +191,48 @@ const Mountain = () => {
 
   // Handler for when "Enter" button is clicked
   const handleLocationClick = (loc) => {
-    // Find the activity for this location
     const activity = locationActivities.mountain.find(
       (a) => a.name.toLowerCase() === loc.name.toLowerCase()
     );
     if (activity) {
-      updateStatus(activity.effect);
-      // Optionally, show a message or modal here
+      const cost = activity.effect.money && activity.effect.money < 0 ? -activity.effect.money : 0;
+      if (money >= cost) {
+        if (isBuyAction(activity)) {
+          if (inventory.length >= INVENTORY_LIMIT) {
+            setActivityMessage("Inventory Full!");
+            return;
+          }
+          updateStatus({ money: activity.effect.money });
+          addItem({
+            name: activity.name,
+            effect: { ...activity.effect, money: 0 },
+            icon: activity.icon,
+            benefit: activity.benefit,
+          });
+          addScore(2);
+          setActivityMessage("Item added to inventory!");
+        } else {
+          updateStatus(activity.effect);
+          setActivityMessage(activity.benefit || "Action performed!");
+        }
+      } else {
+        setActivityMessage("Not enough money!");
+      }
+      setTimeout(() => setActivityMessage(""), 1500);
     }
   };
 
   return (
-    <div
-      className="w-screen h-screen bg-cover bg-bottom bg-no-repeat font-jersey"
-    >
+    <div className="w-screen h-screen bg-cover bg-bottom bg-no-repeat font-jersey">
       <RandomEventModal message={eventMessage} />
       <GameOver />
       <Navbar />
+      {/* Feedback message */}
+      {activityMessage && (
+        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 bg-yellow-200 text-[#255C4E] px-4 py-2 rounded shadow-lg z-50">
+          {activityMessage}
+        </div>
+      )}
       <Activities location={activeLocation ? activeLocation.toLowerCase() : 'mountain'} />
       <Map
         customLocations={customLocations}

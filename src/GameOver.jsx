@@ -3,7 +3,7 @@ import { usePlayerStatus } from './PlayerStatusContext';
 
 const GameOver = () => {
   const navigate = useNavigate();
-  const { gameOver, resetGame } = usePlayerStatus();
+  const { gameOver, resetGame, score } = usePlayerStatus(); // <-- get score
 
   if (!gameOver) return null;
 
@@ -17,6 +17,9 @@ const GameOver = () => {
       <h2 className="text-xl md:text-2xl mb-4">GAME OVER</h2>
       <p className="text-sm md:text-base mb-6 px-2 leading-relaxed">
         One of your vital stats dropped to 0.<br />Your journey ends here.
+      </p>
+      <p className="text-lg font-bold mb-4">
+        Life Satisfaction Score: <span className="text-2xl">{score}</span>
       </p>
       <button
         onClick={() => {

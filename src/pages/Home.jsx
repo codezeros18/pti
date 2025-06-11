@@ -39,11 +39,6 @@ const Home = () => {
     height: window.innerHeight,
   });
 
-  // 🆕 Reset game when Home loads (initial mount only)
-  useEffect(() => {
-    resetGame();
-  }, []);
-
   useEffect(() => {
     const handleResize = () => {
       setWindowSize({
@@ -196,7 +191,7 @@ const Home = () => {
       <RandomEventModal message={eventMessage} />
       <GameOver />
       <Navbar />
-      <Activities location={activeLocation ? activeLocation.toLowerCase() : 'who knows where'} />
+      <Activities location={activeLocation ? activeLocation.toLowerCase() : 'home'} />
       <Map
         customLocations={homeLocations}
         position={position}

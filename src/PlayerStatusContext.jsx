@@ -33,9 +33,16 @@ export const PlayerStatusProvider = ({ children }) => {
     return stored ? JSON.parse(stored) : defaultStatus;
   });
 
+  // --- Add inventory state ---
+  const [inventory, setInventory] = useState(() => {
+    const stored = localStorage.getItem("playerInventory");
+    return stored ? JSON.parse(stored) : [];
+  });
+
   const [gameOver, setGameOver] = useState(false);
   const [eventMessage, setEventMessage] = useState(null);
   const [eventTimeout, setEventTimeout] = useState(null); // 🆕 for managing timeout
+  const [score, setScore] = useState(0);
 
   const MAP_WIDTH = 3;
   const MAP_HEIGHT = 3;
@@ -98,8 +105,31 @@ export const PlayerStatusProvider = ({ children }) => {
     });
   };
 
+  // --- Add inventory methods ---
+  const addItem = (item) => {
+    setInventory((prev) => {
+      const updated = [...prev, item];
+      localStorage.setItem("playerInventory", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const removeItem = (itemName) => {
+    setInventory((prev) => {
+      const idx = prev.findIndex(i => i.name === itemName);
+      if (idx !== -1) {
+        const updated = [...prev];
+        updated.splice(idx, 1);
+        localStorage.setItem("playerInventory", JSON.stringify(updated));
+        return updated;
+      }
+      return prev;
+    });
+  };
+
   const resetGame = () => {
     localStorage.removeItem("playerStatus");
+    localStorage.removeItem("playerInventory"); // <-- Add this line
 
     setStatus((prev) => {
       const newStatus = {
@@ -111,8 +141,13 @@ export const PlayerStatusProvider = ({ children }) => {
       return newStatus;
     });
 
+    setInventory([]); // <-- Add this line
     setGameOver(false);
+    setScore(0); // <-- Add this line
   };
+
+  const addScore = (amount) => setScore((prev) => prev + amount);
+  const resetScore = () => setScore(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -186,6 +221,11 @@ export const PlayerStatusProvider = ({ children }) => {
     }
   }, [status, gameOver]);
 
+  // --- Save inventory on change ---
+  useEffect(() => {
+    localStorage.setItem("playerInventory", JSON.stringify(inventory));
+  }, [inventory]);
+
   return (
     <PlayerStatusContext.Provider
       value={{
@@ -196,6 +236,14 @@ export const PlayerStatusProvider = ({ children }) => {
         setGameOver,
         resetGame,
         eventMessage,
+        // --- Provide inventory and methods ---
+        inventory,
+        addItem,
+        removeItem,
+        // --- Provide score methods ---
+        score,
+        addScore,
+        resetScore,
       }}
     >
       {children}

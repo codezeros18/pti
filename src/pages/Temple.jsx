@@ -12,6 +12,8 @@ import houseBg from '../assets/background/temple1.png';
 import { locationActivities } from "../layout/locationActivities"; // adjust path if needed
 import { useNavigate } from 'react-router-dom';
 
+const INVENTORY_LIMIT = 3;
+
 // Define your custom locations here
 const customLocations = [
   { name: 'Pray', top: 84, left: 56 },
@@ -37,8 +39,16 @@ function percentToTile({ top, left }) {
   return { x, y };
 }
 
+const isBuyAction = (action) =>
+  action.name.toLowerCase().includes("buy") ||
+  action.name.toLowerCase().includes("potion") ||
+  action.name.toLowerCase().includes("snack") ||
+  action.name.toLowerCase().includes("souvenir") ||
+  action.name.toLowerCase().includes("charm");
+
 const Temple = () => {
-  const { location, resetGame, eventMessage, updateStatus } = usePlayerStatus();
+  const { eventMessage, updateStatus, money, addItem, inventory, addScore } = usePlayerStatus();
+  const [activityMessage, setActivityMessage] = useState(""); // <-- Add this
   const [position, setPosition] = useState({ top: 70, left: 60 }); // Top right spawn
   const [activeLocation, setActiveLocation] = useState(null);
   const [direction, setDirection] = useState('down');
@@ -180,13 +190,34 @@ const Temple = () => {
 
   // Handler for when "Enter" button is clicked
   const handleLocationClick = (loc) => {
-    // Find the activity for this location
     const activity = locationActivities.temple.find(
       (a) => a.name.toLowerCase() === loc.name.toLowerCase()
     );
     if (activity) {
-      updateStatus(activity.effect);
-      // Optionally, show a message or modal here
+      const cost = activity.effect.money && activity.effect.money < 0 ? -activity.effect.money : 0;
+      if (money >= cost) {
+        if (isBuyAction(activity)) {
+          if (inventory.length >= INVENTORY_LIMIT) {
+            setActivityMessage("Inventory Full!");
+            return;
+          }
+          updateStatus({ money: activity.effect.money });
+          addItem({
+            name: activity.name,
+            effect: { ...activity.effect, money: 0 },
+            icon: activity.icon,
+            benefit: activity.benefit,
+          });
+          addScore(2); // <-- Add this line to increase score when buying
+          setActivityMessage("Item added to inventory!");
+        } else {
+          updateStatus(activity.effect);
+          setActivityMessage(activity.benefit || "Action performed!");
+        }
+      } else {
+        setActivityMessage("Not enough money!");
+      }
+      setTimeout(() => setActivityMessage(""), 1500);
     }
   };
 
@@ -197,6 +228,12 @@ const Temple = () => {
       <RandomEventModal message={eventMessage} />
       <GameOver />
       <Navbar />
+      {/* Feedback message */}
+      {activityMessage && (
+        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 bg-yellow-200 text-[#255C4E] px-4 py-2 rounded shadow-lg z-50">
+          {activityMessage}
+        </div>
+      )}
       <Activities location={activeLocation ? activeLocation.toLowerCase() : 'temple'} />
       <Map
         customLocations={customLocations}
