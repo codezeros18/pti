@@ -22,10 +22,10 @@ const Section = () => {
         <div className="flex flex-wrap gap-4 mt-2">
           {statusList.map((stat, index) => (
             <div key={index} className="flex items-center gap-2">
-              <img src={stat.icon} className="w-6 h-6" />
+              <img src={stat.icon} className="w-3 h-3 md:w-6 md:h-6" />
               <div className="w-32 bg-gray-300 rounded-full overflow-hidden">
                 <div
-                  className="h-3 bg-green-500 transition-all duration-500"
+                  className="h-1 md:h-2 bg-green-500 transition-all duration-500"
                   style={{ width: `${stat.value}%` }}
                 ></div>
               </div>

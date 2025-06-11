@@ -7,11 +7,29 @@ import Control from '../layout/Control';
 import { usePlayerStatus } from '../PlayerStatusContext';
 import GameOver from '../GameOver';
 import RandomEventModal from "../components/RandomEventModal";
+import collisionData from '../collision.json'; // adjust path if needed
+import houseBg from '../assets/background/maps2.png'; // adjust path if needed
 
+function isWalkable(tileX, tileY) {
+  if (
+    tileX < 0 || tileX >= 40 ||
+    tileY < 0 || tileY >= 30
+  ) return false;
+  const collisionLayer = collisionData.layers.find(l => l.name === "Collision");
+  const idx = tileY * 40 + tileX;
+  return collisionLayer.data[idx] === 0;
+}
+
+// Converts percent position to tile coordinates
+function percentToTile({ top, left }) {
+  const x = Math.floor((left / 100) * 40);
+  const y = Math.floor((top / 100) * 30);
+  return { x, y };
+}
 
 const Home = () => {
   const { location, resetGame, eventMessage } = usePlayerStatus(); // 🆕 Grab resetGame
-  const [position, setPosition] = useState({ top: 50, left: 50 });
+  const [position, setPosition] = useState({ top: 20, left: 50 });
   const [activeLocation, setActiveLocation] = useState(null);
   const [direction, setDirection] = useState('down');
   const [isMoving, setIsMoving] = useState(false);
@@ -37,28 +55,27 @@ const Home = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const locationList = [
-    { name: 'Dungeon', top: 60, left: 10 },
-    { name: 'Mountain', top: 33, left: 25 },
-    { name: 'Lake', top: 70, left: 30 },
-    { name: 'Temple', top: 50, left: 80 },
-    { name: 'Beach', top: 76, left: 50 },
-    { name: 'Home', top: 50, left: 50 },
+  const homeLocations = [
+    { name: 'Dungeon', top: 8, left: 44 },
+    { name: 'Mountain', top: 24, left: 98 },
+    { name: 'Lake', top: 40, left: 10 },
+    { name: 'Temple', top: 4, left: 10 },
+    { name: 'Beach', top: 92, left: 50 },
+    { name: 'Home', top: 24, left: 82 },
   ];
-  
+
+  // Update checkProximity to use homeLocations
   const checkProximity = (pos) => {
     const threshold = 10;
-    for (let loc of locationList) {
+    for (let loc of homeLocations) {
       const distance = Math.sqrt(
         Math.pow(pos.top - loc.top, 2) + Math.pow(pos.left - loc.left, 2)
       );
-  
       if (distance < threshold) {
         setActiveLocation(loc.name);
         return;
       }
     }
-  
     setActiveLocation(null);
   };  
 
@@ -66,8 +83,8 @@ const Home = () => {
     setDirection(dir);
     setIsMoving(true);
     setPosition((prev) => {
-      const step = customStep ?? 0.2; // Smaller step for slower movement
-      const newPosition = { ...prev };
+      const step = customStep ?? 0.2;
+      let newPosition = { ...prev };
       switch (dir) {
         case 'up':
           newPosition.top = Math.max(prev.top - step, 0);
@@ -83,6 +100,11 @@ const Home = () => {
           break;
         default:
           break;
+      }
+      // Collision check
+      const { x, y } = percentToTile(newPosition);
+      if (!isWalkable(x, y)) {
+        return prev; // Block movement if not walkable
       }
       checkProximity(newPosition);
       return newPosition;
@@ -169,22 +191,24 @@ const Home = () => {
   useEffect(() => {
     if (!moveDir) setIsMoving(false);
   }, [moveDir]);
-
   return (
-    <div
-      className="w-screen h-screen bg-cover bg-bottom bg-no-repeat font-jersey"
-    >
+    <div className="w-screen h-screen bg-cover bg-bottom bg-no-repeat font-jersey">
       <RandomEventModal message={eventMessage} />
       <GameOver />
       <Navbar />
       <Activities location={activeLocation ? activeLocation.toLowerCase() : 'who knows where'} />
       <Map
+        customLocations={homeLocations}
         position={position}
         direction={direction}
         isMoving={isMoving}
-        onLocationClick={(loc, name) => handleLocationHover(loc, name)}
+        onLocationClick={() => {}}
         viewportWidth={windowSize.width}
         viewportHeight={windowSize.height}
+        backgroundImage={houseBg}
+        collisionData={collisionData}
+        mapWidth={1600}
+        mapHeight={1000}
       />
       <Control setMoveDir={setMoveDir} stopCharacter={stopCharacter} />
       <Section />

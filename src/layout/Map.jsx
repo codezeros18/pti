@@ -46,7 +46,9 @@ import walkLeft3_2 from '../assets/Char3/WalkLeft2.PNG';
 import walkRight3_1 from '../assets/Char3/WalkRight1.png';
 import walkRight3_2 from '../assets/Char3/WalkRight2.PNG';
 
-import Background from '../assets/background/backgroundstradew.png';
+import Background from '../assets/background/maps2.png';
+import DefaultBackground from '../assets/background/maps2.png'; // Default background
+import { useNavigate } from "react-router-dom"; // Add this import
 
 const charAnimations = [
   // Char1
@@ -76,31 +78,29 @@ const charAnimations = [
 ];
 
 // All values in % from the top-left corner
-const locations = [
-  { name: 'Dungeon', icon: dungeon, top: 60, left: 10 },
-  { name: 'Mountain', icon: mountain, top: 33, left: 25 },
-  { name: 'Lake', icon: lake, top: 70, left: 30 },
-  { name: 'Temple', icon: temple, top: 50, left: 80 },
-  { name: 'Beach', icon: beach, top: 76, left: 50 },
-  { name: 'Home', icon: home, top: 50, left: 50 },
-];
 
 // Clamp helper
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
-const MAP_WIDTH = 1279; // ganti sesuai ukuran asli gambar
-const MAP_HEIGHT = 960; // ganti sesuai ukuran asli gambar
+const PROXIMITY_RADIUS = 4; // in percent, adjust as needed
 
 const Map = ({
-  position,
-  direction,
-  isMoving,
-  onLocationClick,
-  viewportWidth,
-  viewportHeight,
+  position = { top: 50, left: 50 },
+  direction = "down",
+  isMoving = false,
+  onLocationClick = () => {},
+  viewportWidth = 800,
+  viewportHeight = 600,
+  customLocations,
+  backgroundImage,
+  collisionData,
+  mapWidth = 1600,   // 🆕 add this
+  mapHeight = 1000,  // 🆕 add this
 }) => {
   const { selectedCharacter } = useGame();
   const [frame, setFrame] = useState(0);
+  const [nearLocation, setNearLocation] = useState(null); // Track nearby location
+  const navigate = useNavigate(); // For navigation
 
   // Ganti frame setiap 150ms saat bergerak
   useEffect(() => {
@@ -115,6 +115,18 @@ const Map = ({
     return () => clearInterval(interval);
   }, [isMoving, direction, selectedCharacter]);
 
+  const locationsToRender = customLocations || locations;
+
+  // Check proximity on position change
+  useEffect(() => {
+    const found = locationsToRender.find(loc => {
+      const dx = loc.left - position.left;
+      const dy = loc.top - position.top;
+      return Math.sqrt(dx * dx + dy * dy) <= PROXIMITY_RADIUS;
+    });
+    setNearLocation(found || null);
+  }, [position, locationsToRender]);
+
   const clampedTop = clamp(position.top, 5, 95);
   const clampedLeft = clamp(position.left, 5, 95);
 
@@ -125,15 +137,32 @@ const Map = ({
   }
 
   // Convert position (%) to px
-  const playerX = (position.left / 100) * MAP_WIDTH;
-  const playerY = (position.top / 100) * MAP_HEIGHT;
+  const playerX = (position.left / 100) * mapWidth;
+  const playerY = (position.top / 100) * mapHeight;
 
   // Calculate camera offset so player is centered
-  const maxOffsetX = Math.max(MAP_WIDTH - viewportWidth, 0);
-  const maxOffsetY = Math.max(MAP_HEIGHT - viewportHeight, 0);
+  const maxOffsetX = Math.max(mapWidth - viewportWidth, 0);
+  const maxOffsetY = Math.max(mapHeight - viewportHeight, 0);
 
   const offsetX = clamp(playerX - viewportWidth / 2, 0, maxOffsetX);
   const offsetY = clamp(playerY - viewportHeight / 2, 0, maxOffsetY);
+
+  // Map location name to route path
+  const locationRoutes = {
+    Home: "/house",
+    Beach: "/beach",
+    Lake: "/lake",
+    Temple: "/temple",
+    Mountain: "/mountain",
+    Dungeon: "/dungeon",
+    Map : "/home",
+  };
+
+  // Gunakan backgroundImage prop, fallback ke default
+  const bgImage = backgroundImage || DefaultBackground;
+
+  // Gunakan collisionData prop jika ada
+  // (bisa diteruskan ke logic collision di parent, atau Map jika perlu)
 
   return (
     <div
@@ -148,18 +177,17 @@ const Map = ({
     >
       <div
         style={{
-          width: MAP_WIDTH,
-          height: MAP_HEIGHT,
+          width: mapWidth,
+          height: mapHeight,
           position: 'absolute',
           left: -offsetX,
           top: -offsetY,
-          backgroundImage: `url(${Background})`,
-          backgroundSize: '100% 100%', // supaya gambar tidak kepotong
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           transition: 'left 0.1s, top 0.1s',
         }}
       >
-        {/* Render all map elements here */}
         {/* Render player */}
         <img
           src={charImage}
@@ -167,30 +195,41 @@ const Map = ({
             position: 'absolute',
             left: playerX,
             top: playerY,
-            width: 42, // or 32
-            height: 42, // or 32
+            width: 42,
+            height: 42,
             transform: 'translate(-50%, -50%)',
             zIndex: 10,
           }}
           alt="Player"
         />
-        {/* Render locations, etc */}
-        {locations.map((loc, index) => (
-          <img
-            key={index}
-            src={loc.icon}
+        {/* Show button if near a location */}
+        {nearLocation && (
+          <button
             style={{
               position: 'absolute',
-              left: (loc.left / 100) * MAP_WIDTH,
-              top: (loc.top / 100) * MAP_HEIGHT,
-              width: 48,
-              height: 48,
+              left: playerX + 60,
+              top: playerY,
               transform: 'translate(-50%, -50%)',
-              zIndex: 5,
+              zIndex: 20,
+              padding: '8px 16px',
+              fontSize: 16,
+              background: '#fff',
+              border: '2px solid #333',
+              borderRadius: 8,
+              cursor: 'pointer',
             }}
-            alt={loc.name}
-          />
-        ))}
+            onClick={() => {
+              // Jika ada route, navigate, jika tidak, panggil onLocationClick
+              if (locationRoutes[nearLocation.name]) {
+                navigate(locationRoutes[nearLocation.name]);
+              } else {
+                onLocationClick(nearLocation);
+              }
+            }}
+          >
+            {nearLocation.name}
+          </button>
+        )}
       </div>
     </div>
   );
