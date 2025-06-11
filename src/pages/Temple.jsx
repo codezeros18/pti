@@ -50,11 +50,6 @@ const Temple = () => {
   });
   const navigate = useNavigate();
 
-  // 🆕 Reset game when Home loads (initial mount only)
-  useEffect(() => {
-    resetGame();
-  }, []);
-
   useEffect(() => {
     const handleResize = () => {
       setWindowSize({

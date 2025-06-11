@@ -173,7 +173,11 @@ const Map = ({
         position: 'relative',
         border: '2px solid #333',
         background: '#000',
+        userSelect: 'none', // <-- Prevent selection
+        WebkitUserSelect: 'none', // For Safari
+        msUserSelect: 'none', // For IE/Edge
       }}
+      className="select-none" // If using Tailwind, this also works
     >
       <div
         style={{
@@ -186,7 +190,9 @@ const Map = ({
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           transition: 'left 0.1s, top 0.1s',
+          userSelect: 'none', // Prevent selection inside map
         }}
+        className="select-none"
       >
         {/* Render player */}
         <img
@@ -199,15 +205,17 @@ const Map = ({
             height: 42,
             transform: 'translate(-50%, -50%)',
             zIndex: 10,
+            userSelect: 'none', // Prevent selection on image
           }}
           alt="Player"
+          draggable={false} // <-- Prevent drag on image
         />
         {/* Show button if near a location */}
         {nearLocation && (
           <button
             style={{
               position: 'absolute',
-              left: playerX + 60,
+              left: playerX - 60, // <-- Place button to the left of the player
               top: playerY,
               transform: 'translate(-50%, -50%)',
               zIndex: 20,
@@ -219,7 +227,6 @@ const Map = ({
               cursor: 'pointer',
             }}
             onClick={() => {
-              // Jika ada route, navigate, jika tidak, panggil onLocationClick
               if (locationRoutes[nearLocation.name]) {
                 navigate(locationRoutes[nearLocation.name]);
               } else {

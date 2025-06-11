@@ -42,3 +42,9 @@ html, body, #root {
   padding: 0;
   overflow: hidden;
 }
+
+.noselect {
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
